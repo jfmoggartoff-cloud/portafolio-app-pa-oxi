@@ -1,0 +1,18 @@
+/* Portada de accesos (index.html) */
+:root { --rojo: #E42312; --f: "Segoe UI Variable Display", "Segoe UI", system-ui, Arial, sans-serif; }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; font-family: var(--f); color: #fff; background: #0A0F1A; display: grid; place-items: center; padding: 24px 16px; }
+  .bg { position: fixed; inset: 0; background: center/cover no-repeat; opacity: .28; }
+  .card { position: relative; max-width: 760px; width: 100%; }
+  .logo { height: 54px; margin-bottom: 28px; }
+  h1 { font-size: clamp(30px, 5vw, 52px); line-height: 1.05; margin: 0 0 10px; font-weight: 900; letter-spacing: -.02em; }
+  p.sub { margin: 0 0 30px; color: #c9d1dc; font-size: 18px; }
+  .btns { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+  a.b { display: block; text-decoration: none; color: #fff; border-radius: 18px; padding: 22px 24px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.18); backdrop-filter: blur(8px); transition: transform .2s, background .2s; }
+  a.b:hover { transform: translateY(-3px); background: rgba(255,255,255,.14); }
+  a.b.rojo { background: var(--rojo); border-color: var(--rojo); }
+  a.b b { display: block; font-size: 22px; margin-bottom: 6px; }
+  a.b span { font-size: 15px; opacity: .9; line-height: 1.4; }
+  .lang { margin-top: 14px; font-size: 14px; color: #aab4c3; }
+  .lang a { color: #fff; }
+  ol { margin: 34px 0 0; padding-left: 20px; color: #c9d1dc; font-size: 15px; line-height: 1.6; }
