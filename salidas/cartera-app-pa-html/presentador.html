@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Vista del presentador · PROINVERSIÓN</title>
+<link rel="icon" href="assets/img/favicon.png">
+<link rel="stylesheet" href="assets/presentador.css">
+</head>
+<body>
+<header class="pv-top">
+  <img class="pv-logo" src="assets/img/logo-proinversion-blanco.png" alt="PROINVERSIÓN">
+  <div class="pv-title"><b id="deckTitle"></b><span id="where"></span></div>
+  <div class="pv-actions">
+    <span id="datos" class="datos-badge"></span>
+    <button id="cargarExcel" class="btn" title="Elegir el archivo datos.xlsx (por ejemplo, desde OneDrive o una USB) para actualizar las cifras en ambas vistas">Cargar Excel</button>
+    <input id="excelInput" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden>
+    <span id="conn" class="conn"><i></i><span>Vista de audiencia: sin conexión</span></span>
+    <button id="openAud" class="btn rojo">Abrir vista de audiencia</button>
+    <div id="lang" class="seg" role="group" aria-label="Idioma"><button data-l="es">ES</button><button data-l="en">EN</button></div>
+    <button id="black" class="btn" title="Pantalla negra (B)">Pantalla negra</button>
+    <div class="seg"><button id="fsMinus" title="Reducir texto de notas">A−</button><button id="fsPlus" title="Aumentar texto de notas">A+</button></div>
+    <span id="clock" class="clock"></span>
+  </div>
+</header>
+
+<main class="pv-main">
+  <section class="pv-left">
+    <div class="pv-cur">
+      <div class="pv-lbl"><span class="live">EN PANTALLA</span><span id="curName"></span><span id="stepInfo" class="steps"></span></div>
+      <div class="frame"><iframe id="fCur" src="audiencia.html?vista=preview" title="Escena actual"></iframe></div>
+    </div>
+    <div class="pv-row">
+      <div class="pv-next">
+        <div class="pv-lbl"><span id="nextLbl">SIGUIENTE</span><span id="nextName"></span></div>
+        <div class="frame"><iframe id="fNext" src="audiencia.html?vista=preview" title="Siguiente"></iframe></div>
+      </div>
+      <div class="pv-timer">
+        <div class="t-main"><small>Tiempo transcurrido</small><b id="tElapsed">00:00</b></div>
+        <div class="t-pace" id="pace"><span>—</span></div>
+        <div class="t-grid">
+          <div><small>Objetivo</small><b id="tTarget">--:--</b></div>
+          <div><small>Restante</small><b id="tLeft">--:--</b></div>
+          <div><small>En esta escena</small><b id="tScene">0:00</b></div>
+        </div>
+        <div class="t-bar"><i id="tSceneBar"></i></div>
+        <div class="t-btns">
+          <button id="tPlay" class="btn">Iniciar</button>
+          <button id="tReset" class="btn ghost">Reiniciar</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="pv-notes" id="notes">
+    <div class="n-block n-msg"><small id="lMsg">Mensaje clave</small><p id="nMsg"></p></div>
+    <div class="n-block"><small id="lGuion">Guion</small><ul id="nGuion"></ul></div>
+    <div class="n-block"><small id="lCifras">Cifras para recordar</small><div id="nCifras" class="chips"></div></div>
+    <div class="n-block" id="bQ"><small id="lQ">Preguntas probables</small><div id="nQ"></div></div>
+    <div class="n-block n-bridge" id="bPuente"><small id="lPuente">Puente a la siguiente escena</small><p id="nPuente"></p></div>
+    <div class="n-block" id="bCtl" hidden><small id="lCtl">Controles en pantalla</small><div id="nCtl"></div></div>
+  </section>
+</main>
+
+<footer class="pv-bottom">
+  <button id="prev" class="nav" aria-label="Anterior">‹</button>
+  <div id="map" class="map"></div>
+  <button id="next" class="nav big" aria-label="Siguiente">›</button>
+</footer>
+
+<div id="help" class="help">
+  <div class="help-in">
+    <h3>Cómo presentar</h3>
+    <ol>
+      <li>Conecte el proyector o la pantalla gigante en modo <b>extendido</b> (Windows: tecla <kbd>Win</kbd> + <kbd>P</kbd> → Extender).</li>
+      <li>Pulse <b>Abrir vista de audiencia</b>. Si el navegador lo permite, se abrirá directamente en la segunda pantalla; si no, arrástrela allí.</li>
+      <li>En esa ventana pulse <kbd>F</kbd> (o doble clic) para pantalla completa.</li>
+      <li>Avance desde aquí o con el control remoto: <kbd>→</kbd> <kbd>Av Pág</kbd> <kbd>Espacio</kbd>. Retroceda con <kbd>←</kbd>. <kbd>L</kbd> cambia idioma, <kbd>B</kbd> pantalla negra.</li>
+    </ol>
+    <p>También puede abrir <code>audiencia.html</code> por su cuenta en otra ventana o pestaña del mismo navegador: se sincroniza automáticamente.</p>
+    <button class="btn rojo" id="helpOk">Entendido</button>
+  </div>
+</div>
+
+<script src="contenido.js"></script>
+<script src="datos.js"></script>
+<script src="assets/deck-core.js"></script>
+<script src="assets/deck-datos.js"></script>
+<script src="assets/presentador.js"></script>
+</body>
+</html>

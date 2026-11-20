@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="es">
+<head><meta charset="utf-8"><title>Exportar modelo de datos</title></head>
+<body>
+<!-- Herramienta interna (la usa scripts/crear_excel_datos.ps1): convierte contenido.js en el modelo de hojas del Excel de datos. -->
+<pre id="out">cargando…</pre>
+<script src="../contenido.js"></script>
+<script src="deck-core.js"></script>
+<script>
+(function () {
+  'use strict';
+  const P = window.PINV, D = window.DECK;
+  P.setLang('es');
+  const es = (v) => (v == null ? '' : typeof v === 'object' && !Array.isArray(v) ? (v.es != null ? v.es : '') : String(v));
+  const en = (v) => (v == null ? '' : typeof v === 'object' && !Array.isArray(v) ? (v.en != null ? v.en : v.es || '') : String(v));
+  const esBi = (v) => v && typeof v === 'object' && !Array.isArray(v) && ('es' in v || 'en' in v);
+  const lblEsc = (s, i) => `${i + 1}. ${es(s.titulo || s.titulo2 || s.kicker || s.id)}`.replace(/\s+/g, ' ');
+  const secNom = (k) => (P.SECT[k] || P.SECT.otros).es;
+  const qx = (q) => { if (!q) return ''; const m = /^(I{1,3}|IV)-(\d{2})$/.exec(q); return m ? `${m[1]}-20${m[2]}` : q; };
+  const cant = (n) => { const m = /(\d+)\s*[–-]\s*(\d+)/.exec(String(n || '')); return m ? (+m[2] - +m[1] + 1) : 1; };
+
+  /* ---------- Excel formulas (English syntax, as required by Range.Formula) ---------- */
+  const CIF = (r) => `INDEX(Cifras[Valor],MATCH("${r}",Cifras[Ruta],0))`;
+  const sumP = (col, lista, pest, excl) => `SUMIFS(Proyectos[${col}],Proyectos[Lista],"${lista}"${pest ? `,Proyectos[Pestaña],"${pest}"` : ''}${excl ? `,Proyectos[Etiqueta ES],"<>${excl}"` : ''},Proyectos[Mostrar],"<>No")`;
+  function formulaCalc(c) {
+    if (c.listas) return c.listas.map((l) => sumP(c.cantidad ? 'Cantidad' : 'Monto (USD millones)', l, c.pestana, c.excluirEtiqueta)).join('+');
+    if (c.serieSector) return `SUMIFS(SeriesSector[Monto (USD millones)],SeriesSector[Escena],"${c.serieSector}",SeriesSector[Año],">=${c.desde}",SeriesSector[Año],"<=${c.hasta}")`;
+    if (c.serieAnual) return `SUMIFS(SeriesAnuales[${c.campo}],SeriesAnuales[Escena],"${c.serieAnual}")`;
+    if (c.distribucion) return `SUMIFS(Distribucion[Monto],Distribucion[Escena],"${c.distribucion}")`;
+    if (c.rutas) return c.rutas.map(CIF).join('+');
+    return '0';
+  }
+
+  /* ---------- Cifras: walk each scene ---------- */
+  const SALTAR = new Set(['id', 'capitulo', 'tipo', 'transicion', 'min', 'respaldo', 'img', 'logos', 'logo', 'mapa', 'icono', 'c', 'benefIcono', 'fotoDer', 'blur', 'cols', 'colQ', 'colM', 'colP', 'filtro', 'notas', 'fuentes', 'titulo', 'titulo1', 'titulo2', 'kicker', 'chips', 'leyenda', 'label', 'panelTitulo', 'panelSub', 'compTitulo', 'obrasTitulo', 'montoLbl', 'firmaLbl', 'metaLbl', 'subtitulo', 'donaTitulo', 'letra', 'sigla', 'trans', 'cost', 'sect', 'resaltar', 'qrs', 'dec', 'pre', 'nombre', 'tres', 'pilares', 'mapaTxt', 'e', 's']);
+  const TEXTOS = new Set(['emblema', 'dest', 'obra', 'comp', 'obras', 'l', 'modalidad', 'usdTxt', 'benefTxt', 'firma', 'adj', 'resumen', 'proyeccion', 'vecesTxt', 'etapa', 'proyecto', 'regiones', 'benef', 'fecha', 'nota', 'fase', 'que', 'suf', 'txt', 'zona', 'periodo', 'monto', 'sub', 'proyLbl', 'usdPre', 'big']);
+  const NOMBRE = { num: 'Cifra principal', monto: 'Monto (texto)', usd: 'Monto (USD millones)', proy: 'N.º de proyectos', ad: 'N.º de adendas', proyLbl: 'Texto bajo el n.º de proyectos', usdPre: 'Texto sobre el monto', regiones: 'Regiones (texto)', benef: 'Beneficiarios', benefTxt: 'Texto de beneficiarios', periodo: 'Periodo', cant: 'Cantidad', que: 'Qué (texto)', suf: 'Unidad', txt: 'Texto bajo la cifra', pct: 'Porcentaje', hab: 'Habitantes (millones)', habTxt: 'Texto de habitantes', veces: 'Multiplicador', vecesTxt: 'Texto del multiplicador', meta: 'Meta (USD millones) · CALCULADA', total: 'Total (USD millones)', v: 'Valor', t: 'Texto', fecha: 'Fecha de actualización', nota: 'Nota al pie / fuente', sub: 'Subtítulo', emblema: 'Proyecto emblemático', emblemaUsd: 'Monto del emblemático (USD millones)', paises: 'Países inversionistas (códigos: es, cn, us…)', anio: 'Año', dest: 'Proyecto destacado', n: 'N.º de proyectos', firma: 'Fecha de firma', usdTxt: 'Texto del monto', comp: 'Componente', obras: 'Obra', obra: 'Intervención', zona: 'Zona', modalidad: 'Modalidad', adj: 'Adjudicación', resumen: 'Resumen', proyeccion: 'Proyección', etapa: 'Descripción de la etapa', proyecto: 'Proyecto', l: 'Viñeta', fase: 'Fase', big: 'Titular', items: 'Tarjeta', cols: 'Columna', ejes: 'Eje', anios: 'Año', cards: 'Tarjeta', zonas: 'Zona', datos: 'Dato', nodos: 'Nodo', part: 'Participante', bloques: 'Bloque', grupos: 'Grupo', etapas: 'Etapa', destacado: 'Cifra destacada', top: 'Banda superior', extra: 'Dato adicional', filas: 'Fila', hitos: 'Hito' };
+  const contexto = (o) => o && (es(o.titulo) || es(o.nombre) || es(o.zona) || es(o.que) || es(o.proyecto) || (o.anio && String(o.anio)) || es(o.t) || es(o.v) || o.sigla || '');
+  const cifras = [];
+  cifras.push(['_deck.titulo', '0. General', 'Título de la presentación', 'Texto', '', es(D.titulo), en(D.titulo)]);
+  cifras.push(['_deck.duracionMin', '0. General', 'Duración objetivo (minutos)', 'Número', D.duracionMin, '', '']);
+  D.escenas.forEach((s, i) => {
+    const L = lblEsc(s, i);
+    const skipEsc = { explorador: ['grupos'], avances: [], horizonte: ['barras'], apiladas: ['anios'], historia: ['serie', 'funciones'] }[s.tipo] || [];
+    const walk = (o, ruta, etiqueta, clave) => {
+      if (o == null) return;
+      if (esBi(o)) {
+        const tx = es(o) + ' ' + en(o);
+        if (TEXTOS.has(clave) || /\d/.test(tx)) cifras.push([ruta, L, etiqueta, 'Texto', '', es(o), en(o)]);
+        return;
+      }
+      if (Array.isArray(o)) {
+        if (clave === 'paises') { cifras.push([ruta, L, etiqueta, 'Lista de códigos', '', o.join(', '), '']); return; }
+        o.forEach((x, k) => walk(x, `${ruta}.${k}`, `${etiqueta} ${NOMBRE[clave] ? '' : ''}${k + 1}${contexto(x) ? ' (' + contexto(x).slice(0, 48) + ')' : ''}`.replace(/\s+/g, ' '), clave));
+        return;
+      }
+      if (typeof o === 'object') {
+        Object.keys(o).forEach((k) => {
+          if (SALTAR.has(k) && !(k === 'cols' && s.tipo === 'cifras')) return;
+          if (s.tipo === 'capitulo' && k === 'num') return;
+          if (s.tipo === 'evolucion' && k === 'v') return;
+          if (ruta === s.id && skipEsc.includes(k)) return;
+          if (s.tipo === 'avances' && k === 'items') return;
+          if (s.tipo === 'horizonte' && clave === 'adendas' && k === 'l') return;
+          const nom = NOMBRE[k] || k;
+          const et = etiqueta ? `${etiqueta} › ${nom}` : nom;
+          walk(o[k], `${ruta}.${k}`, et, k);
+        });
+        return;
+      }
+      if (typeof o === 'number') cifras.push([ruta, L, etiqueta, 'Número', o, '', '']);
+      else if (typeof o === 'string' && (TEXTOS.has(clave) || /\d/.test(o))) cifras.push([ruta, L, etiqueta, 'Texto', '', o, o]);
+    };
+    walk(s, s.id, '', '');
+    // Metas de listas: calculadas desde la hoja Proyectos
+    if (s.tipo === 'explorador') {
+      if (s.grupos.length > 1) s.grupos.forEach((g, k) => { if (g.meta != null) cifras.push([`${s.id}.grupos.${k}.meta`, L, `Meta pestaña «${es(g.t)}» (USD millones) · CALCULADA`, 'Calculado', '=' + sumP('Monto (USD millones)', s.id, es(g.t)), '', '']); });
+      if (s.meta != null) cifras.push([`${s.id}.meta`, L, 'Meta de la lista (USD millones) · CALCULADA', 'Calculado', '=' + sumP('Monto (USD millones)', s.id, s.grupos.length > 1 ? es(s.grupos[0].t) : null), '', '']);
+    }
+  });
+  // las metas que el recorrido haya capturado como número se reemplazan por la fila calculada
+  const calcRutas = new Set(cifras.filter((r) => r[3] === 'Calculado').map((r) => r[0]));
+  const cifrasFinal = cifras.filter((r) => !(r[3] === 'Número' && calcRutas.has(r[0])));
+
+  /* ---------- Proyectos ---------- */
+  const proyectos = [], listas = [];
+  D.escenas.forEach((s, i) => {
+    const L = lblEsc(s, i);
+    if (s.tipo === 'explorador') {
+      listas.push([s.id, L]);
+      s.grupos.forEach((g) => g.filas.forEach((f) => proyectos.push([s.id, es(g.t), f.n || '', cant(f.n), secNom(f.s), es(f.p), en(f.p), f.e || '', qx(f.ad), qx(f.q), f.m, es(f.tag), en(f.tag), 'Sí', '', ''])));
+    } else if (s.tipo === 'avances') {
+      listas.push([s.id, L]);
+      s.grupos.forEach((g) => g.items.forEach(([k, nm, v]) => proyectos.push([s.id, es(g.t), '', 1, secNom(k), es(nm), en(nm), '', '', '', v, '', '', 'Sí', '', ''])));
+    }
+  });
+
+  /* ---------- Sectores (resúmenes de horizonte) ---------- */
+  const sectores = [];
+  const patron = /^\d+ (proyecto|proyectos)$/;
+  D.escenas.forEach((s, i) => {
+    if (s.tipo !== 'horizonte') return;
+    const L = lblEsc(s, i), F = s.fuentes || {};
+    (s.barras || []).forEach((b) => { const fijoEs = patron.test(es(b.n)) ? '' : es(b.n), fijoEn = fijoEs ? en(b.n) : ''; sectores.push([s.id, L, 'Barra', secNom(b.s), (F.barras || [])[0] || '', (F.barras || [])[1] || '', 'Proyectos', fijoEs, fijoEn, 'Sí']); });
+    if (s.adendas) s.adendas.l.forEach(([k]) => sectores.push([s.id, L, 'Adenda', secNom(k), (F.adendas || [])[0] || '', (F.adendas || [])[1] || '', 'Adendas', '', '', 'Sí']));
+  });
+
+  /* ---------- Series ---------- */
+  const seriesSector = [], seriesAnual = [], distrib = [];
+  D.escenas.forEach((s) => {
+    if (s.tipo === 'apiladas') s.anios.forEach((a) => a.seg.forEach(([k, v]) => seriesSector.push([s.id, a.anio, secNom(k), v])));
+    if (s.tipo === 'historia') { s.serie.forEach(([a, m, c]) => seriesAnual.push([s.id, a, m, c])); s.funciones.forEach((f) => distrib.push([s.id, es(f.t), en(f.t), f.v, f.c])); }
+  });
+
+  /* ---------- Notas ---------- */
+  const lines = (a) => (a || []).join('\n');
+  const notas = D.escenas.map((s, i) => {
+    const n = s.notas || {}, a = n.es || {}, b = n.en || {};
+    return [s.id, lblEsc(s, i), a.msj || '', b.msj || '', lines(a.guion), lines(b.guion), lines(a.cifras), lines(b.cifras), (a.preguntas || []).map((q) => q.join(' || ')).join('\n'), (b.preguntas || []).map((q) => q.join(' || ')).join('\n'), a.puente || '', b.puente || ''];
+  });
+
+  /* ---------- Catálogo de sectores ---------- */
+  const catalogo = Object.entries(P.SECT).map(([k, d]) => [d.es, k, d.en, P.SECT[P.fam(k)].es, d.c]);
+
+  /* ---------- Controles ---------- */
+  const controles = (D.controles || []).map((c) => [c.c, '=' + formulaCalc(c.calc), '=' + (c.decl ? CIF(c.decl) : formulaCalc(c.declCalc)), c.tol || 0, c.regla || 'igual']);
+
+  const modelo = { id: D.id, titulo: es(D.titulo), cifras: cifrasFinal, proyectos, listas, sectores, seriesSector, seriesAnual, distrib, notas, catalogo, controles };
+  document.getElementById('out').textContent = JSON.stringify(modelo);
+})();
+</script>
+</body>
+</html>
